@@ -83,35 +83,27 @@ int main(int argc, char **argv) {
             // Get the side by side image
             zed.retrieveImage(svo_image, VIEW::SIDE_BY_SIDE, MEM::CPU, low_resolution);
             int svo_position = zed.getSVOPosition();
+            auto timestamp = zed.getTimestamp(sl::TIME_REFERENCE::IMAGE).getMicroseconds();
+            cv::putText(svo_image_ocv, to_string(timestamp), cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 0));
 
             // Display the frame
             cv::imshow("View", svo_image_ocv);
             key = cv::waitKey(10);
-            
-            switch (key) {
-            case 's':
-                svo_image.write(("capture_" + to_string(svo_position) + ".png").c_str());
-                break;
-            case 'f':
-                zed.setSVOPosition(svo_position + svo_frame_rate);
-                break;
-            case 'b':
-                zed.setSVOPosition(svo_position - svo_frame_rate);
-                break;
-            }
+
+            svo_image.write(("capture_" + to_string(svo_position) + "-" + to_string(timestamp) + ".png").c_str());
 
             ProgressBar((float)(svo_position / (float)nb_frames), 30);
         }
         else if (returned_state == sl::ERROR_CODE::END_OF_SVOFILE_REACHED)
         {
-            print("SVO end has been reached. Looping back to 0\n");
-            zed.setSVOPosition(0);
+            print("SVO end has been reached.\n");
+            break;
         }
         else {
             print("Grab ZED : ", returned_state);
             break;
         }
-     } 
+     }
     zed.close();
     return EXIT_SUCCESS;
 }
